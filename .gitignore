@@ -1,0 +1,10 @@
+node_modules
+.yarnrc.yml
+yarn.lock
+.yarn
+.env
+
+uploads/
+.cache
+
+.vscode
