@@ -89,7 +89,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(checkDatabaseConnection)
-app.use(express.static(path.join(__dirname + '/../../client/dist')))
+// app.use(express.static(path.join(__dirname + '/../../client/dist')))
+app.use(express.static(path.join(__dirname, '..', 'proj4_T1Dixpert', 'dist')))
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.get('/proxy-image', async (req, res) => {
@@ -112,7 +113,9 @@ app.use(v1router) // TODO: Remove this line after frontend is updated to use /ap
 app.use('/api/v1', v1router)
 
 app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname + '/../../client/dist/index.html'))
+  // res.sendFile(path.join(__dirname + '/../../client/dist/index.html'))
+  res.sendFile(path.join(__dirname + '/../../proj4_T1Dixpert/dist/index.html'))
+
 })
 
 // Connect to MongoDB and listen for events
