@@ -50,6 +50,7 @@ const addPatient = async (req, res) => {
 
     const newUser = new User({
       name,
+      contactNumber,
       role: ['patient'],
       password: hashedPassword,
       email: [email],

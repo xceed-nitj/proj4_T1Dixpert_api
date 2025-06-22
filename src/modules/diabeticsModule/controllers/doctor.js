@@ -29,6 +29,7 @@ const addDoctor = async (req, res) => {
 
     const newUser = new User({
       name,
+      contactNumber, // Store contact number
       role: ['doctor'], // Set the role to doctor
       password: hashedPassword, // Hashed default password
       email: [email], // Store email as an array
@@ -36,6 +37,7 @@ const addDoctor = async (req, res) => {
       isEmailVerified: false, // Set default value for email verification
       isFirstLogin: true, // Set default value for first login
     })
+    console.log('New User saved:', newUser);
 
     // Save the user to the database
     await newUser.save()
