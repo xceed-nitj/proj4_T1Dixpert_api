@@ -125,67 +125,137 @@ exports.verification = async(req,res)=>{
 // login
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
+  console.log("Login attempt with:", email);
 
-  // Check if username and password are provided
+  // Check if credentials are present
   if (!email || !password) {
     return res.status(400).json({
-      message: "Username or Password not present",
+      message: "Email/Phone and Password are required",
+    });
+  }
+
+  // Validate format
+  const isPhone = /^[0-9]{10}$/.test(email);
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!isPhone && !isEmail) {
+    return res.status(400).json({
+      message: "Please enter a valid email or 10-digit phone number",
     });
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne(isPhone ? { contactNumber: email } : { email });
 
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "Login not successful",
         error: "User not found",
       });
     }
 
-    // Compare given password with hashed password
-    bcrypt.compare(password, user.password, (compareErr, result) => {
-      if (compareErr) {
-        return res.status(500).json({
-          message: "Password comparison failed",
-          error: compareErr.message,
-        });
-      }
+    // Compare passwords
+    const match = await bcrypt.compare(password, user.password);
 
-      if (result) {
-        const maxAge = 3 * 60 * 60; // 3 hours in seconds
-        const token = jwt.sign(
-          { id: user._id, email, role: user.role },
-          jwtSecret,
-          {
-            expiresIn: maxAge,
-          }
-        );
+    if (!match) {
+      return res.status(401).json({
+        message: "Incorrect password",
+      });
+    }
 
-        // Set the JWT token as a cookie
-        res.cookie("jwt", token, {
-          httpOnly: true,
-          maxAge: maxAge * 10000,
-          // domain: "nitjtt.netlify.app",
-          secure: true,
-          sameSite: "none",
-        });
+    // Create JWT
+    const maxAge = 3 * 60 * 60; // 3 hours
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      jwtSecret,
+      { expiresIn: maxAge }
+    );
 
-        res.status(200).json({
-          message: "User successfully logged in",
-          user,
-        });
-      } else {
-        res.status(400).json({ message: "Login not successful" });
-      }
+    // Send JWT as cookie
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      maxAge: maxAge * 1000,
+      secure: true,
+      sameSite: "none",
+    });
+
+    res.status(200).json({
+      message: "User successfully logged in",
+      user,
     });
   } catch (error) {
-    res.status(400).json({
-      message: "An error occurred",
+    console.error("Login error:", error);
+    res.status(500).json({
+      message: "An error occurred during login",
       error: error.message,
     });
   }
 };
+// exports.login = async (req, res, next) => {
+//   const { email, password } = req.body;
+//   console.log("heyy",req.body);
+
+
+//   // Check if username and password are provided
+//   if (!email || !password) {
+//     return res.status(400).json({
+//       message: "Username or Password not present",
+//     });
+//   }
+
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(400).json({
+//         message: "Login not successful",
+//         error: "User not found",
+//       });
+//     }
+
+//     // Compare given password with hashed password
+//     bcrypt.compare(password, user.password, (compareErr, result) => {
+//       if (compareErr) {
+//         return res.status(500).json({
+//           message: "Password comparison failed",
+//           error: compareErr.message,
+//         });
+//       }
+
+//       if (result) {
+//         const maxAge = 3 * 60 * 60; // 3 hours in seconds
+//         const token = jwt.sign(
+//           { id: user._id, email, role: user.role },
+//           jwtSecret,
+//           {
+//             expiresIn: maxAge,
+//           }
+//         );
+
+//         // Set the JWT token as a cookie
+//         res.cookie("jwt", token, {
+//           httpOnly: true,
+//           maxAge: maxAge * 10000,
+//           // domain: "nitjtt.netlify.app",
+//           secure: true,
+//           sameSite: "none",
+//         });
+
+//         res.status(200).json({
+//           message: "User successfully logged in",
+//           user,
+//         });
+//       } else {
+//         res.status(400).json({ message: "Login  was not  successful" });
+//       }
+//     });
+//   } catch (error) {
+//     res.status(400).json({
+//       message: "An error occurred",
+//       error: error.message,
+//     });
+//   }
+// };
 
 exports.update = async (req, res, next) => {
   try {
