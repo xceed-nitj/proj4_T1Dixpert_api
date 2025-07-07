@@ -1,31 +1,49 @@
-exports.verifyWebhook = (req, res) => {
+const Chat = require('../../../models/diabeticsModule/chat');
+
+
+
+const verifyWebhook = (req, res) => {
   const VERIFY_TOKEN = process.env.WEBHOOK_VERIFY_TOKEN;
-   console.log('Webhook verification request received');
-  console.log('Query parameters:', req.query);
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('Webhook verified');
+  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     return res.status(200).send(challenge);
-  } else {
-    return res.sendStatus(403);
+  }
+  return res.sendStatus(403);
+};
+
+const receiveWebhook = async (req, res, next) => {
+  try {
+    const body = req.body;
+    if (body.object === 'whatsapp_business_account') {
+      for (const entry of body.entry || []) {
+        for (const change of entry.changes || []) {
+          for (const m of change.value.messages || []) {
+            const isTemplate = m.type === 'template';
+            await Chat.create({
+              messageId: m.id,
+              direction: 'inbound',
+              from: m.from,
+              to: process.env.WHATSAPP_PHONE_NUMBER,
+              text: isTemplate ? null : m.text?.body || null,
+              templateName: isTemplate ? m.template?.name : null,
+              templateParams: isTemplate ? m.template?.components : null,
+              timestamp: new Date(parseInt(m.timestamp, 10) * 1000),
+            });
+          }
+        }
+      }
+      return res.sendStatus(200);
+    }
+    res.sendStatus(404);
+  } catch (err) {
+    next(err);
   }
 };
 
-
-
-exports.handleWebhookMessage = (req, res) => {
-  const body = JSON.stringify(req.body,null,2);
-  console.log('Received webhook body:', body);
-
-  if (body.object) {
-    
-
-    
-    return res.status(200).send('EVENT_RECEIVED');
-  }
-
-  return res.sendStatus(404);
+module.exports = {
+  verifyWebhook,
+  receiveWebhook
 };
