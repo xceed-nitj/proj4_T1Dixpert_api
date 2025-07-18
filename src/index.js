@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser')
 const path = require('path')
 const axios = require('axios')
 const v1router = require('./routes')
+const { initBroadcastScheduler } = require('../src/modules/diabeticsModule/controllers/broadcast.js')
 // CORS configuration
 app.use(
   cors({
@@ -125,8 +126,15 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB')
+
+    // Initialize broadcast scheduler
+    
+     await initBroadcastScheduler()
+
+
+
     // Start the Express server once connected to MongoDB
     app.listen(8010, () => {
       console.log('Server started on port 8010')
