@@ -11,5 +11,7 @@ router.use("/doctor", require("./doctor.js"));
 // router.use("/whatsapp", require("./whatsappService.js"));
 router.use("/chat", require("./chat.js"));
 router.use("/webhook", require("./webhook.js"));
+router.use("/group", require("./group.js"));
+router.use("/broadcast", require("./broadcast.js"));
 
 module.exports = router;
