@@ -17,6 +17,12 @@ const DailyDosageSchema = new mongoose.Schema(
       },
       bloodSugar: { type: Number, required: true },
       carboLevel: { type: Number, required: true },
+      mealName: { type: String , required: true },
+      mealQuantityNumber: { type: Number },
+      mealQuantityCategory: { 
+        type: String,
+        enum: ['Light', 'Normal', 'Heavy']
+      },
       insulin: { type: Number, required: true },
       longLastingInsulin: { type: Number },
       physicalActivity: { type: String },
